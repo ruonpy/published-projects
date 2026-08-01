@@ -431,22 +431,43 @@ frameborder="1"
     function frame_online(url) {
         window.frames["iframe"].location = url;
     }
-        // =========================================================
-    // 🔊 SES TAKILMASINI ENGELLEYEN KOD 
+    // =========================================================
+    // 🔊 Ses Problemi
     // =========================================================
     window.addEventListener('beforeunload', function () {
-        // Pygbag / SDL2 ses motorunu sekme kapanma uyarısı anında dondurur
-        if (window.SDL2 && window.SDL2.audioContext) {
-            window.SDL2.audioContext.suspend();
-        } else if (window.audioContext) {
-            window.audioContext.suspend();
+        try {
+            // 1. Pygbag/Emscripten varsayılan ses bağlamı (AudioContext)
+            if (typeof Module !== 'undefined' && Module.audioContext) {
+                Module.audioContext.suspend();
+            }
+
+            // 2. OpenAL (SDL2 Audio backend) bağlamı
+            if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.audioCtx) {
+                AL.currentContext.audioCtx.suspend();
+            }
+
+            // 3. Genel Web Audio Context kontrolü (Tüm aktif ses kanallarını dondur)
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx && AudioCtx.prototype) {
+                // Tarayıcıdaki tüm ses akışını dondurur
+                if (window.audioContext) window.audioContext.suspend();
+            }
+        } catch (e) {
+            console.warn("Audio suspend error:", e);
         }
     });
 
-    // Kullanıcı uyarıda "Sayfada Kal" derse sesi geri açar
+    // Kullanıcı "Sayfada Kal" derse sesi tekrar başlat
     window.addEventListener('focus', function () {
-        if (window.SDL2 && window.SDL2.audioContext && window.SDL2.audioContext.state === 'suspended') {
-            window.SDL2.audioContext.resume();
+        try {
+            if (typeof Module !== 'undefined' && Module.audioContext && Module.audioContext.state === 'suspended') {
+                Module.audioContext.resume();
+            }
+            if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.audioCtx) {
+                AL.currentContext.audioCtx.resume();
+            }
+        } catch (e) {
+            console.warn("Audio resume error:", e);
         }
     });
 
