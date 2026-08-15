@@ -431,45 +431,6 @@ frameborder="1"
     function frame_online(url) {
         window.frames["iframe"].location = url;
     }
-    // =========================================================
-    // 🔊 Ses Problemi
-    // =========================================================
-    window.addEventListener('beforeunload', function () {
-        try {
-            // 1. Pygbag/Emscripten varsayılan ses bağlamı (AudioContext)
-            if (typeof Module !== 'undefined' && Module.audioContext) {
-                Module.audioContext.suspend();
-            }
-
-            // 2. OpenAL (SDL2 Audio backend) bağlamı
-            if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.audioCtx) {
-                AL.currentContext.audioCtx.suspend();
-            }
-
-            // 3. Genel Web Audio Context kontrolü (Tüm aktif ses kanallarını dondur)
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx && AudioCtx.prototype) {
-                // Tarayıcıdaki tüm ses akışını dondurur
-                if (window.audioContext) window.audioContext.suspend();
-            }
-        } catch (e) {
-            console.warn("Audio suspend error:", e);
-        }
-    });
-
-    // Kullanıcı "Sayfada Kal" derse sesi tekrar başlat
-    window.addEventListener('focus', function () {
-        try {
-            if (typeof Module !== 'undefined' && Module.audioContext && Module.audioContext.state === 'suspended') {
-                Module.audioContext.resume();
-            }
-            if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.audioCtx) {
-                AL.currentContext.audioCtx.resume();
-            }
-        } catch (e) {
-            console.warn("Audio resume error:", e);
-        }
-    });
 
     </script>
 </body>
